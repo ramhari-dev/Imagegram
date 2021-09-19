@@ -1,4 +1,5 @@
 ﻿using Application.Common.Interfaces;
+using Application.Common.Security;
 using Domain.Entities;
 using MediatR;
 using System;
@@ -9,6 +10,7 @@ using System.Threading.Tasks;
 
 namespace Application.Comments.Commands.AddComment
 {
+    [Authorize]
     public class AddCommentCommand : IRequest<int>
     {
         public string Content { get; set; }

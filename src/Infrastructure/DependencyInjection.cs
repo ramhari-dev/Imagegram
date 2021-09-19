@@ -5,6 +5,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using System;
+using Amazon.Runtime;
+using Amazon.S3;
 
 namespace Infrastructure
 {
@@ -29,6 +31,7 @@ namespace Infrastructure
 
 
             services.AddTransient<IDateTime, DateTimeService>();
+            services.AddTransient<IAmazonS3, AmazonS3Client>();
 
             return services;
         }
