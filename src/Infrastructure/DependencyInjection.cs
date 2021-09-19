@@ -32,6 +32,7 @@ namespace Infrastructure
 
             services.AddTransient<IDateTime, DateTimeService>();
             services.AddTransient<IAmazonS3, AmazonS3Client>();
+            services.AddTransient<IAmazonS3BucketService, AmazonS3BucketService>();
 
             return services;
         }
