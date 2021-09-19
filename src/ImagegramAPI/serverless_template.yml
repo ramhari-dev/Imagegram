@@ -1,0 +1,105 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: "AWS::Serverless-2016-10-31"
+Description: "Imagegram Serverless Deployment template"
+
+Parameters: 
+  MemorySizeRef:
+    Description: "Memory size for Lambda function"
+    AllowedValues: [128, 256, 512, 1024, 2048, 4096]
+    Default: 128
+    Type: String
+
+Resources: 
+  # IAM Role
+  ImagegramIamRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action: ['sts:AssumeRole']
+          Effect: Allow
+          Principal:
+            Service: ['lambda.amazonaws.com']
+        Version: '2012-10-17'
+      Path: /
+      Policies:
+      - PolicyDocument:
+          Statement:
+          - Effect: Allow
+            Action:
+            - s3:AbortMultipartUpload
+            - s3:GetBucketLocation
+            - s3:GetObject
+            - s3:GetBucketAcl
+            - s3:GetObjectAcl
+            - s3:ListBucket
+            - s3:ListBucketMultipartUploads
+            - s3:PutObject
+            - s3:ListAllMyBuckets
+            - s3:DeleteObject
+            Resource: "*"
+          - Effect: Allow
+            Action:
+            - logs:PutLogEvents
+            Resource:
+            - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/imagegram-logs:log-stream:*
+          - Effect: Allow
+            Action:
+            - execute-api:Invoke
+            Resource: "arn:aws:execute-api:*:*:*"
+          - Effect: Allow
+            Action:
+            - execute-api:Invoke
+            Resource: arn:aws:execute-api:*:*:*
+          - Effect: Allow
+            Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutRetentionPolicy
+            - logs:DescribeLogGroups
+            - logs:DescribeLogStreams
+            - logs:PutLogEvents
+            - logs:GetLogEvents
+            Resource: arn:aws:logs:*:*:*
+          Version: '2012-10-17'
+        PolicyName: "imagegram-iam-role"
+
+
+  ImagegramLambda:
+    Type: "AWS::Serverless::Function"
+    Properties:
+      FunctionName: "ImagegramLambdaFunction"
+      Description: "Imagegram Lambda function"
+      Handler: "ImagegramAPI::ImagegramAPI.LambdaEntryPoint::FunctionHandlerAsync"
+      MemorySize: {Ref: MemorySizeRef}
+      Role: 
+        Fn::GetAtt: ImagegramIamRole.Arn
+      Runtime: dotnetcore3.1
+      Timeout: 90
+      CodeUri: './bin/Release/netcoreapp3.1/linux-x64/publish'
+      Environment:
+        Variables:
+          LoggingLevel: "Info"
+      Events:
+        ProxyResource:
+          Type: "Api"
+          Properties:
+            Path: "/{Proxy+}"
+            Method: "Any"
+            RestApiId: {Ref: ApiGateway}
+        RootResource:
+          Type: "Api"
+          Properties:
+            Path: "/"
+            Method: "Any"
+            RestApiId: {Ref: ApiGateway}
+
+  ApiGateway:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: "Prod"
+      EndpointConfiguration:
+        Type: EDGE
+      BinaryMediaTypes:
+      - "*~1*"
+      Name: "ImagegramApiGateway"
