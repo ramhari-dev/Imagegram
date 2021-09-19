@@ -2,5 +2,7 @@
 {
     public class GetPostsResult
     {
+        public int NextCursor { get; set; }
+        public object Data { get; set; }
     }
 }

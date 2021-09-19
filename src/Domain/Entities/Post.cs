@@ -5,7 +5,7 @@ namespace Domain.Entities
 {
     public class Post
     {
-        public string Id { get; set; } = Guid.NewGuid().ToString();
+        public int Id { get; set; }
         public string Caption { get; set; }
         public string Image { get; set; }
         public Account Creator { get; set; }
